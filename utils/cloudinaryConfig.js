@@ -1,5 +1,6 @@
 // cloudinaryConfig.js
 const cloudinary = require("cloudinary").v2;
+console.log("from cloudynary");
 
 cloudinary.config({
   cloud_name: "delcuaej9",

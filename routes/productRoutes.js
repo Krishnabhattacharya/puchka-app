@@ -3,6 +3,8 @@ const productData = require("../models/productSchema");
 const route = express.Router();
 const upload=require("../utils/upload.js");
 const deleteFromCloudinary=require('../utils/delete_images.js');
+const fs = require("fs"); // To delete local files after uploading to Cloudinary
+
 route.get("/getProductById", async (req, res) => {
   try {
     const Id = req.query.Id;
@@ -55,29 +57,53 @@ route.get("/getAllProduct", async (req, res) => {
 //     res.status(400).json({ success: false, message: error.message });
 //   }
 // });
-  route.post("/addProduct", upload.array("files",5), async (req, res) => {
-    try {
-      const assets = req.files.map(file => ({
-        type: file.mimetype.includes("video") ? "video" : "image",
-        url: file.path,
-      }));
+  
 
-      const product = await productData.create({
-        title: req.body.title,
-        category: req.body.category,
-        subCategory: req.body.subCategory,
-        assets: assets,
-        colors: JSON.parse(req.body.colors),
-        sizes: JSON.parse(req.body.sizes),
-        price: req.body.price,
-        description: req.body.description,
+route.post("/addProduct", upload.array("assets",10), async (req, res) => {
+  try {
+    console.log("ji");
+    console.log(req.files);
+    
+    // Parse colors and sizes fields as JSON
+    const colors = JSON.parse(req.body.colors);
+    const sizes = JSON.parse(req.body.sizes);
+
+    // Upload files to Cloudinary and collect URLs
+    const assets = [];
+    for (const file of req.files) {
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: "product_assets",
+        resource_type: "auto", // Automatically detects image or video
+      });
+console.log(result.resource_type);
+
+      assets.push({
+        type: result.resource_type, // 'image' or 'video'
+        url: result.secure_url,
       });
 
-      res.status(200).json({ product: product, success: true });
-    } catch (error) {
-      res.status(400).json({ success: false, message: error.message });
+      // Delete local file after uploading to Cloudinary
+      fs.unlinkSync(file.path);
     }
-  });
+
+    // Create product in the database with provided data and uploaded assets
+    const product = await productData.create({
+      title: req.body.title,
+      category: req.body.category,
+      subCategory: req.body.subCategory,
+      assets: assets,
+      colors: colors,
+      sizes: sizes,
+      price: parseFloat(req.body.price), // Convert price to a number
+      description: req.body.description,
+    });
+
+    res.status(200).json({ product: product, success: true });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
 route.put("/updateProduct", async (req, res) => {
   const id = req.query.id;
   try {
