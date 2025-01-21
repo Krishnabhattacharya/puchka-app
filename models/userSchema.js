@@ -8,13 +8,7 @@ const userSchema = new mongoose.Schema(
       required: false,
       default: "",
     },
-    email: {
-      type: String,
-      required: false,
-      unique: true,
-      lowercase: true,
-      trim: true,
-    },
+
     password: {
       type: String,
       required: true,
@@ -57,7 +51,6 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    versionKey: false,
   }
 );
 

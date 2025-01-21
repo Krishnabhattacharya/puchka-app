@@ -101,7 +101,7 @@ const jwt=require("jsonwebtoken");
 const JWT_SECRET = "golgappa";
 route.post("/register", async (req, res) => {
   try {
-    const { mobileNumber, name, password } = req.body;
+    const { mobileNumber, name, password,city, pincode } = req.body;
 
     const existingUser = await userData.findOne({ mobileNumber });
     if (existingUser) {
@@ -114,6 +114,8 @@ route.post("/register", async (req, res) => {
       name,
       mobileNumber,
       password, 
+      city,
+      pincode,
       referralCode,
     });
     await newUser.save();
