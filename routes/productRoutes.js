@@ -103,7 +103,7 @@ route.get("/getAllProduct", async (req, res) => {
   //     res.status(400).json({ success: false, message: error.message });
   //   }
   // });/
-  route.post("/upload", upload.array("assets", 10), async (req, res) => {
+  route.post("/addProduct", upload.array("assets", 10), async (req, res) => {
     try {
       const { title, category, subCategory, colors, price, description, sizes } = req.body;
       const images = req.files.map((file) => file.path);
