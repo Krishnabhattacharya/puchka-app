@@ -45,7 +45,7 @@ route.get("/getAllProduct", async (req, res) => {
 route.post("/addProduct", upload.array("assets", 10), async (req, res) => {
   try {
     const { title, category, subCategory, colors, price, description, sizes } = req.body;
-    let images = null;
+    let images = [];
     
     if (req.files) {
       images = req.files.map((file) => {
@@ -75,7 +75,7 @@ route.post("/addProduct", upload.array("assets", 10), async (req, res) => {
     return res.status(201).json({ message: "Product uploaded successfully!", product: newProduct });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
