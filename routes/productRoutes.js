@@ -1,9 +1,9 @@
 const express = require("express");
 const productData = require("../models/productSchema");
 const route = express.Router();
-const upload=require("../utils/upload.js");
-const deleteFromCloudinary=require('../utils/delete_images.js');
-const cloudinary=require("../utils/cloudinaryConfig.js");
+const upload = require("../utils/upload.js");
+const deleteFromCloudinary = require('../utils/delete_images.js');
+const cloudinary = require("../utils/cloudinaryConfig.js");
 const fs = require("fs"); // To delete local files after uploading to Cloudinary
 const { json } = require("stream/consumers");
 
@@ -42,136 +42,72 @@ route.get("/getAllProduct", async (req, res) => {
   }
 });
 
-// route.post("/addProduct", async (req, res) => {
-//   try {
-//     const product = await productData.create({
-//       title: req.body.title,
-//       category: req.body.category,
-//       subCategory: req.body.subCategory,
-//       assets: req.body.assets,
-//       colors: req.body.colors,
-//       sizes: req.body.sizes,
-//       price: req.body.price,
-//       description: req.body.description,
-//     });
-//     res.status(200).json({ product: product, success: true });
-//   } catch (error) {
-//     res.status(400).json({ success: false, message: error.message });
-//   }
-// });
-  // route.post("/addProduct", upload.array("assets",10), async (req, res) => {
-  //   try {
-  //     // Parse colors and sizes fields as JSON
-  //     //console.log(req.body);
-  //     const data = JSON.parse(JSON.stringify(req.body))
-  // //console.log(data);
-  // console.log(JSON.parse(data.sizes));
-  // const size=JSON.parse(data.sizes);
-  // const {title,category,subCategory,colors,price,description,sizes}=data;
-  //     const assets = [];
-  //     for (const file of req.files) {
-  //       const result = await cloudinary.uploader.upload(file.path, {
-  //         folder: "product_assets",
-  //         resource_type: "auto", 
-  //       });
+route.post("/addProduct", upload.array("assets", 10), async (req, res) => {
+  try {
+    const { title, category, subCategory, colors, price, description, sizes } = req.body;
 
-  //       assets.push({
-  //         type: result.resource_type, // 'image' or 'video'
-  //         url: result.secure_url,
-  //       });
+    const images = req.files.map((file) => {
+      const type = file.mimetype.split("/")[0];
+      return {
+        type,
+        url: file.path,
+      };
+    });
 
-  //       // Delete local file after uploading to Cloudinary
-  //       fs.unlinkSync(file.path);
-  //     }
+    const parsedColors = JSON.parse(colors);
+    const parsedSizes = JSON.parse(sizes);
 
-  //     // Create product in the database with provided data and uploaded assets
-  //     const product = await productData.create({
-  //       title: title,
-  //       category: category,
-  //       subCategory:subCategory,
-  //       assets: assets,
-  //       colors: colors,
-  //       sizes: size,
-  //       price: price, 
-  //       description: description,
-  //     });
+    const newProduct = new productData({
+      title,
+      category,
+      subCategory,
+      colors: parsedColors,
+      price,
+      description,
+      sizes: parsedSizes,
+      assets: images,
+    });
 
-  //     res.status(200).json({ product: product, success: true });
-  //   } catch (error) {
-  //     console.log(error);
-      
-  //     res.status(400).json({ success: false, message: error.message });
-  //   }
-  // });/
-  route.post("/addProduct", upload.array("assets", 10), async (req, res) => {
-    try {
-      const { title, category, subCategory, colors, price, description, sizes } = req.body;
-      const images = req.files.map((file) => file.path);
-      const parsedColors = JSON.parse(colors);
-      const parsedSizes = JSON.parse(sizes);
-  
-      const newProduct = new productData({
-        title,
-        category,
-        subCategory,
-        colors: parsedColors,
-        price,
-        description,
-        sizes: parsedSizes,
-        images,
-      });
-  
-      await newProduct.save();
-      res.status(201).json({ message: "Product uploaded successfully!", product: newProduct });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Internal Server Error" });
-    }
-  });
-  
+    await newProduct.save();
+    res.status(201).json({ message: "Product uploaded successfully!", product: newProduct });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
 
-  route.put("/updateProduct", async (req, res) => {
-    const id = req.query.id;
-    try {
-      await productData.updateOne(
-        { _id: id },
-        {
-          title: req.body.title,
-          category: req.body.category,
-          subCategory: req.body.subCategory,
-          colors: req.body.colors,
-          sizes: req.body.sizes,
-          price: req.body.price,
-          description: req.body.description,
-        }
-      );
-      res.status(200).json({ success: true });
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
-    }
-  });
-
-// route.delete("/deleteProduct", async (req, res) => {
-//   try {
-//     const Id = req.query.Id;
-//     await productData.deleteOne({ _id: Id });
-//     res.status(200).json({ success: true });
-//   } catch (error) {
-//     res.status(500).json({ success: false, message: error.message });
-//   }
-// });
+route.put("/updateProduct", async (req, res) => {
+  const id = req.query.id;
+  try {
+    await productData.updateOne(
+      { _id: id },
+      {
+        title: req.body.title,
+        category: req.body.category,
+        subCategory: req.body.subCategory,
+        colors: req.body.colors,
+        sizes: req.body.sizes,
+        price: req.body.price,
+        description: req.body.description,
+      }
+    );
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 route.delete("/deleteProduct", async (req, res) => {
   try {
     const Id = req.query.Id;
-    
+
     const product = await productData.findById(Id);
     if (!product) {
       return res.status(404).json({ success: false, message: "Product not found" });
     }
 
     const deletionPromises = product.assets.map(asset => {
-      const publicId = asset.url.split('/').pop().split('.')[0]; // Extract public ID
+      const publicId = asset.url.split('/').pop().split('.')[0];
       return deleteFromCloudinary(publicId);
     });
     await Promise.all(deletionPromises);
