@@ -193,35 +193,6 @@ route.get("/getAllUser", async (req, res) => {
   }
 });
 
-// route.put("/addUser", async (req, res) => {
-//   try {
-//     const user = await userData.findOne({
-//       mobileNumber: req.body.mobileNumber,
-//     });
-
-//     if (!user) {
-//       return res.status(404).json({ success: false, message: "User not found" });
-//     }
-
-//     const updatedUser = await userData.updateOne(
-//       { _id: user._id },
-//       {
-//         name: req.body.name,
-//         address: req.body.address,
-//         nearByLocation: req.body.nearByLocation,
-//         city: req.body.city,
-//         walletAmount: req.body.walletAmount,
-//         pincode: req.body.pincode,
-//       }
-//     );
-
-    // const updatedUserData = await userData.findById(user._id);
-
-//     res.status(200).json({ user: updatedUserData, success: true });
-//   } catch (error) {
-//     res.status(400).json({ success: false, message: error.message });
-//   }
-// });
 
 
 route.put("/updateUser", async (req, res) => {
