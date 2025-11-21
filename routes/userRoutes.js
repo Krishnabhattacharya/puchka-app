@@ -161,12 +161,14 @@ route.post("/login", async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({
-      success: false,
-      message: "Server error during login"
-    });
-  }
+  console.error("🔥 Login error full:", error);
+  return res.status(500).json({
+    success: false,
+    message: error.message,
+    stack: error.stack
+  });
+}
+
 });
 
 // Refresh Token
