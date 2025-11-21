@@ -45,9 +45,9 @@ route.get("/getAllProduct", async (req, res) => {
 route.post("/addProduct", upload.array("assets", 10), async (req, res) => {
   try {
     const { title, category, subCategory, colors, price, description, sizes } = req.body;
-    let iamges = null;
+    let images = null;
     if (req.files) {
-      iamges = req.files.map((file) => {
+      images = req.files.map((file) => {
         const type = file.mimetype.split("/")[0];
         return {
           type,
