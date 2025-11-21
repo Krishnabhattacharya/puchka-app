@@ -42,10 +42,12 @@ route.get("/getAllProduct", async (req, res) => {
   }
 });
 
+/*
 route.post("/addProduct", upload.array("assets", 10), async (req, res) => {
   try {
     const { title, category, subCategory, colors, price, description, sizes } = req.body;
     let images = null;
+    
     if (req.files) {
       images = req.files.map((file) => {
         const type = file.mimetype.split("/")[0];
@@ -77,7 +79,61 @@ route.post("/addProduct", upload.array("assets", 10), async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+*/
+route.post("/addProduct", (req, res) => {
+  upload.array("assets", 10)(req, res, async (multerErr) => {
+    if (multerErr) {
+      console.error("Multer error:", multerErr);
+      if (multerErr.name === "MulterError") {
+        return res.status(400).json({ message: multerErr.message });
+      }
+      return res.status(400).json({ message: multerErr.message || "File upload failed" });
+    }
 
+    try {
+      console.log("After multer — files present:", Array.isArray(req.files) ? req.files.length : 0);
+
+      const { title, category, subCategory, colors = "[]", price, description, sizes = "[]" } = req.body || {};
+
+      const files = Array.isArray(req.files) ? req.files : [];
+
+
+      const images = files.map((f) => {
+        const url = f.path || f.location || f.secure_url || null;
+        const type = (f.mimetype || "").split("/")[0] || "unknown";
+        return { type, url };
+      });
+
+      let parsedColors, parsedSizes;
+      try { parsedColors = typeof colors === "string" ? JSON.parse(colors) : colors; }
+      catch { return res.status(400).json({ message: "Invalid JSON for colors" }); }
+      try { parsedSizes = typeof sizes === "string" ? JSON.parse(sizes) : sizes; }
+      catch { return res.status(400).json({ message: "Invalid JSON for sizes" }); }
+
+      if (!title || !category || !price) {
+        return res.status(400).json({ message: "Missing required fields." });
+      }
+
+      const newProduct = new productData({
+        title,
+        category,
+        subCategory,
+        colors: parsedColors,
+        price,
+        description,
+        sizes: parsedSizes,
+        assets: images,
+      });
+
+      await newProduct.save();
+      return res.status(201).json({ message: "Product uploaded successfully!", product: newProduct });
+
+    } catch (err) {
+      console.error("addProduct error:", err);
+      return res.status(500).json({ message: "Internal Server Error", error: err });
+    }
+  });
+});
 route.put("/updateProduct", async (req, res) => {
   const id = req.query.id;
   try {
